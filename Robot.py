@@ -1,18 +1,13 @@
 import pandas as pd
 import numpy as np
 import random
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import serial
-
-ser = serial.Serial('/dev/ttyACM0', 9600) # Initialize serial
-rospy.init_node('goalieBot', anonymous=True) # Initialize base for movement
-movement = rospy.Publisher("/mobile_base/commands/velocity", Twist, queue_size=5)
-r = rospy.Rate(10);
 
 class Learner:
     def __init__(self):
         num_bins = 10
-        num_states
+        num_states = 2
         num_states = num_bins ** num_states
         num_actions = 10
         self.ACTIONS = np.linspace(-1.5, 1.5, num_actions)
@@ -45,13 +40,6 @@ def build_state(features):
 
 def to_bin(value, bins):
     return np.digitize(x=[value], bins=bins)[0]
-
-def makeMove(action):
-    move_cmd = Twist()
-    move_cmd.linear.x = ACTIONS[action]
-    movement.publish(move_cmd)
-    r.sleep()
-    return state
 
 def getAngle():
     a=float('inf')
@@ -86,8 +74,11 @@ def cart_pole_with_qlearning():
 
             action = learner.getMove(newState, reward)
 
-            makeMove(action)
+            #Do move
 
             if done:
                 timeSurvived.append(step)
                 break
+
+if __name__ == "__main__":
+    cart_pole_with_qlearning()
