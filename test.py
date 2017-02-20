@@ -1,5 +1,5 @@
 import gym
-from gypm import wrappers
+from gym import wrappers
 import pandas as pd
 import numpy as np
 import random
