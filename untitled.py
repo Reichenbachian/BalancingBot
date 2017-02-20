@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 
 class Learner:
     def __init__(self):
-        num_states = 10 ** 4
+        num_bins = 10
+        num_states = num_bins ** 4
         num_actions = 2
         self.qmatrix = np.random.uniform(low=-1, high=1, size=(num_states, num_actions))
         self.epsilon = .6
@@ -88,9 +89,3 @@ def cart_pole_with_qlearning():
         #                                                           unichr(177),  # plus minus sign
         #                                                           last_time_steps.std()))
         #     break
-    env.monitor.close()
-
-if __name__ == "__main__":
-    random.seed(0)
-    # plt.ion()
-    cart_pole_with_qlearning()
