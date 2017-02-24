@@ -1,4 +1,4 @@
-import pandas as pd
+import pandas as pdOA
 import numpy as np
 import random
 import serial
@@ -13,20 +13,21 @@ import time
 ser = serial.Serial('/dev/ttyACM0', 9600)
 rospy.init_node('goalieBot', anonymous=True)
 movement = rospy.Publisher("/mobile_base/commands/velocity", Twist, queue_size=None, tcp_nodelay=True, latch=True)
-timePerStep = 4
+timePerStep = 8
 r = rospy.Rate(timePerStep)
 moveCmd = Twist()
 speed = 0
+reward = 0
 
 class Learner:
     num_bins = 10
-    num_actions = 2
+    num_actions = 30
     def __init__(self):
         num_states = 2
         self.qmatrix = np.zeros((Learner.num_bins+1, Learner.num_bins+1, Learner.num_actions+1))
         self.epsilon = .7
-        self.gamma = .9
-        self.alpha = .2
+        self.gamma = .75
+        self.alpha = .8
         self.epsilonDecay = .99
         self.state = [0, 0]
         self.actionIndex = 0
@@ -46,7 +47,7 @@ class Learner:
         self.actionIndex = newActionIndex
         self.state = newState
         self.epsilon *= self.epsilonDecay # decreases the need of randomness as the model becomes more trained
-        return newActionIndex
+        self.state = newState
         self.epsilon *= self.epsilonDecay # decreases the need of randomness as the model becomes more trained
         return newActionIndex
 
@@ -71,42 +72,51 @@ def makeMove(action):
     movement.publish(moveCmd)
 
 def getReward():
-    # getAngle() + 
-    print(100/(abs(speed*30)**2+1))
-    return 100/(abs(speed*30)**2+1)
+    global reward
+    rewardArr = [0 for x in range(10)]
+    while True:
+        del rewardArr[0]
+        rewardArr.append(1000/(abs(getAngle())+1))
+        reward = np.sum(rewardArr)/len(rewardArr)
+        time.sleep(.1)
+        #reward = 1000/(abs(getAngle()**2)+1)
 
 def cart_pole_with_qlearning():
     global speed
     learner = Learner()
     angleBins = np.array(list(np.linspace(-60,70,Learner.num_bins)))
-    actionBins = np.array(list(np.linspace(-1,1,Learner.num_actions+1)))
+    actionBins = np.array(list(np.linspace(-1.5,1.5,Learner.num_actions+1)))
     previousAngle = getAngle()
 
     try:
         print("Trying to load matrix...", end='')
-        learner.qmatrix = pickle.load(open("qMatrixAccel.pkl", 'rb'))
+        learner.qmatrix = pickle.load(open("qMatrix.pkl", 'rb'))
         print("Success!")
     except:
         print("Failed.")
     # we are not going to differentiate between episode and step because,
     # when we train the robot, we let it run without ever stopping it
+    # we are not going to differentiate between episode and step because,
+    # when we train the robot, we let it run without ever stopping it
     # at each episode (i.e. moment when robot fails)
+    thread = Thread(target = getReward)
+    thread.start()
     for step in range(10000):
         currentAngle = getAngle()
         state = [to_bin(currentAngle, angleBins), to_bin(previousAngle, angleBins)]
-        reward = getReward()
+        #reward = getReward()
+        print("Reward:", reward)
         action = actionBins[learner.getMove(state, reward)]
-        reward = getReward()
-        action = actionBins[learner.getMove(state, reward)]
-        thread = Thread(target = makeMove, args = (speed, ))
-        thread.start()
-        speed += .1 if action == 1 else -.1
-        makeMove(speed)
+#        thread = Thread(target = makeMove, args = (speed, ))
+#        thread.start()
+#        speed += .1 if action == 1 else -.1
+        #print("Here?")
+        makeMove(action)
         previousAngle = currentAngle
         time.sleep(1/timePerStep)
         if step%5 == 0:
             print("Saving the q-matrix")
-            pickle.dump(learner.qmatrix, open("qMatrixAccel.pkl", 'wb'))
+            pickle.dump(learner.qmatrix, open("qMatrix.pkl", 'wb'))
 
 if __name__ == "__main__":
     cart_pole_with_qlearning()
