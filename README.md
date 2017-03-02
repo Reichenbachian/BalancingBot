@@ -1,7 +1,7 @@
 # BalancingBot
 This project is a computer science 630 final. Its goal was to teach a 'turtlebot'(the name of the robot) to balance an inverted pendulum using q-learning. <br>
 The inputs to the model were the current and the previous angle. The output was a speed in between -1.5m/s and 1.5m/s. It would get a live reward.<br>
-On running a simulation, it succeeded quickly. The OpenAI videos of its training are under the 'cartpole-experiment-1' folder.<br>
+<a href="https://www.youtube.com/watch?v=5QLkVmMY2ww">On running a simulation</a>, it succeeded quickly. The OpenAI videos of its training are under the 'cartpole-experiment-1' folder.<br>
 In order to get the angle, we used a vex potentiometer attached to an arduino attached to our ubuntu mini-computer(on the turtlebot.)<br>
 For more information, the jupyter notebook contains more comprehensize coverage of the code and process.
 <br>**The Turtlebot**<br>
